@@ -1,0 +1,222 @@
+
+
+
+Schema 1:
+------------
+struct_in = "| department_management | department : Budget_in_Billions, Creation, Name | head: head_ID, name, age"
+
+
+
+Q1:
+----
+text_in = "How many heads of the departments are older than 56 ?"
+
+1) model answer:
+---------------
+['select count(*) from head where age > 56']
+
+1) Real answer:
+--------------
+"SELECT count(*) FROM head WHERE age  >  56"
+
+
+Q2:
+---
+text_in = "List the creation year, name and budget of each department."
+
+2) model answer:
+----------------
+['select creation, name, budget_in_Billions from department']
+
+2) Real answer:
+--------------
+"SELECT creation ,  name ,  budget_in_billions FROM department"
+
+
+Q3:
+---
+"What are the maximum and minimum budget of the departments?"
+
+3) model answer:
+----------------
+['select max(budget_in_Billions), min(budget_in_Billions) from department']
+
+3) Real answer:
+--------------
+"SELECT max(budget_in_billions) ,  min(budget_in_billions) FROM department"
+
+
+Q4:
+----
+"What is the average number of employees of the departments whose rank is between 10 and 15?",
+
+4) model answer:
+----------------
+['select avg(t1.employees) from department as t1 join head as t2 on t1.department = t2.department_management where t2.rank between 10 and 15']
+
+4) Real answer:
+--------------
+"SELECT avg(num_employees) FROM department WHERE ranking BETWEEN 10 AND 15"
+
+
+Q5:
+---
+"What are the names of the heads who are born outside the California state?"
+
+5) model answer:
+----------------
+['select name from head where age!= "California"']
+
+5) Real answer:
+--------------
+"SELECT name FROM head WHERE born_state != 'California'"
+
+
+=====================================================
+=====================================================
+=====================================================
+
+Schema 2: 
+------------
+struct_in = "| concert_singer | stadium : stadium_id , location , name , capacity , highest , lowest , average | singer : singer_id , name , country ( France ) , song_name , song_release_year , age , is_male | concert : concert_id , concert_name , theme , stadium_id , year | singer_in_concert : concert_id , singer_id"
+
+Q1:
+---
+text_in = "what is the minimum, average, and maximum age of all singers from France?"
+
+1) model answer:
+----------------
+['select min(age), avg(age), max(age) from singer where country = "France"']
+
+
+1) Real answer:
+--------------
+
+
+Q2:
+---
+text_in = "What are the names of the singers and number of concerts for each person?"
+
+2) model answer:
+----------------
+['select t2.name, count(*) from singer_in_concert as t1 join concert as t2 on t1.songer_id = t2.songer_id group by t1.songer_id']
+
+2) Real answer:
+--------------
+"SELECT T2.name ,  count(*) FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id GROUP BY T2.singer_id"
+
+
+Q3:
+---
+List all singer names in concerts in year 2014.
+
+3) model answer:
+----------------
+['select t2.name from concert as t1 join singer_in_concert as t2 on t1.singer_id = t2.singer_id where t1.year = 2014']
+
+3) Real answer:
+--------------
+"SELECT T2.name FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id JOIN concert AS T3 ON T1.concert_id  =  T3.concert_id WHERE T3.year  =  2014",
+
+
+Q4:
+---
+"What are the names of the singers who performed in a concert in 2014?"
+
+4) model answer:
+----------------
+['select t2.name from concert as t1 join singer_in_concert as t2 on t1.singer_id = t2.singer_id where t1.year = 2014']
+
+4) Real answer:
+--------------
+"SELECT T2.name FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id JOIN concert AS T3 ON T1.concert_id  =  T3.concert_id WHERE T3.year  =  2014",
+
+
+Q5:
+---
+"what is the name and nation of the singer who have a song having 'Hey' in its name?"
+
+5) model answer:
+----------------
+['select name, country from singer where song_name like "%hey%"']
+
+5) Real answer:
+--------------
+"SELECT name ,  country FROM singer WHERE song_name LIKE '%Hey%'"
+
+
+=====================================================
+=====================================================
+=====================================================
+
+
+
+Schema 3:
+--------
+struct_in = "| student_transcripts_tracking | Addresses : city, country, line_1, line_2, state_province_county, zip_postcode | Courses : course_description, course_id | Departments : department_description | Sections: section_description, section_name | Students : cell_mobile_number, date_of_latest_logon, email_address, first_name, login_name | Student_Enrolment_Courses : course_id"
+
+Q1:
+---
+What are the names of all courses that have some students enrolled?
+
+1) model answer:
+----------------
+['select t1.course_description from courses as t1 join Student_Enrolment_Courses as t2 on t1.course_id = t2.course_id']
+
+1) Real answer:
+--------------
+ "SELECT DISTINCT T1.course_name FROM Courses AS T1 JOIN Student_Enrolment_Courses AS T2 ON T1.course_id  =  T2.course_id",
+
+
+
+
+Q2:
+----
+"What is the name of the course with the most students enrolled?"
+
+2) model answer:
+----------------
+['select t1.section_name from sections as t1 join Student_Enrolment_Courses as t2 on t1.section_description = t2.course_description group by t2.course_id order by count(*) desc limit 1']
+
+2) Real answer:
+--------------
+"SELECT  T1.course_name FROM Courses AS T1 JOIN Student_Enrolment_Courses AS T2 ON T1.course_id  =  T2.course_id GROUP BY T1.course_name ORDER BY count(*) DESC LIMIT 1",
+
+
+Q3:
+----
+"Find the last name of the students who currently live in the state of North Carolina but have not registered in any degree program.",
+
+3) model answer:
+----------------
+['select cell_mobile_number, date_of_latest_logon from students where state_province_county = "North Carolina" except select cell_mobile_number, date_of_latest_logon from students where degree_enrolment_Courses = "Y"']
+
+3 Real answer:
+--------------
+"SELECT T1.last_name FROM Students AS T1 JOIN Addresses AS T2 ON T1.current_address_id  =  T2.address_id WHERE T2.state_province_county  =  'NorthCarolina' EXCEPT SELECT DISTINCT T3.last_name FROM Students AS T3 JOIN Student_Enrolment AS T4 ON T3.student_id  =  T4.student_id",
+
+
+
+Q4:
+----
+"What are the last name of the students who live in North Carolina but have not registered in any degree programs?",
+
+4) model answer:
+----------------
+['select cell_mobile_number, date_of_latest_logon from students where country = "North Carolina" except select cell_mobile_number, cell_mobile_number from students where degree_enrolment_Courses = \'Y\'']
+
+4) Real answer:
+--------------
+"SELECT T1.last_name FROM Students AS T1 JOIN Addresses AS T2 ON T1.current_address_id  =  T2.address_id WHERE T2.state_province_county  =  'NorthCarolina' EXCEPT SELECT DISTINCT T3.last_name FROM Students AS T3 JOIN Student_Enrolment AS T4 ON T3.student_id  =  T4.student_id",
+
+Q5:
+----
+"Show the date and id of the transcript with at least 2 course results."
+
+5) model answer:
+----------------
+['select t1.date_of_latest_logon, t1.id from student_transcripts_tracking as t1 join Student_Enrolment_Courses as t2 on t1.transcript_tracking = t2.transcript_tracking group by t1.id having count(*) >= 2']
+
+5) Real answer:
+--------------
+"SELECT T2.transcript_date ,  T1.transcript_id FROM Transcript_Contents AS T1 JOIN Transcripts AS T2 ON T1.transcript_id  =  T2.transcript_id GROUP BY T1.transcript_id HAVING count(*)  >=  2",
